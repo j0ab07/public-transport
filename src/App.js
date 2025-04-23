@@ -1,23 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import { Button, Switch, Typography, Container, Box, List, ListItem, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { 
+  Button, Switch, Typography, Container, Box,
+   List, ListItem, ListItemText, Dialog, DialogTitle,
+    DialogContent, DialogActions 
+  } from '@mui/material';
 import './App.css';
+import { styles } from './AppStyles';
+
 
 const App = () => {
-  const [transitInfo, setTransitInfo] = useState([]);
-  const [error, setError] = useState('');
+  //Transit data
+  const [transitInfo, setTransitInfo] = useState([]); //Stores bus/train info
+  const [selectedRoute, setSelectedRoute] = useState(null); // Current selected route
+  
+  //UI/UX States
   const [highContrast, setHighContrast] = useState(false);
-  const [queryLog, setQueryLog] = useState([]);
-  const [selectedRoute, setSelectedRoute] = useState(null);
-  const [currentStopIndex, setCurrentStopIndex] = useState(0);
-  const [showTravelTypeDialog, setShowTravelTypeDialog] = useState(false);
-  const [showRouteDialog, setShowRouteDialog] = useState(false);
   const [micEnabled, setMicEnabled] = useState(false);
-  const [lastErrorTime, setLastErrorTime] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  
+  //Voice Recognition
   const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition();
 
+  const [error, setError] = useState('');
+  const [queryLog, setQueryLog] = useState([]);
+  const [currentStopIndex, setCurrentStopIndex] = useState(0);
+  const [showTravelTypeDialog, setShowTravelTypeDialog] = useState(false);
+  const [showRouteDialog, setShowRouteDialog] = useState(false);
+  const [lastErrorTime, setLastErrorTime] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+
+  //Example buses
   const mockDerbyBuses = {
     'pride park': [
       { stop: 'Morledge', bus: '1A', operator: 'Arriva', destination: 'Pride Park', time: '15:30' },
@@ -44,6 +58,7 @@ const App = () => {
     ],
   };
 
+  //Example routes
   const mockRoutes = {
     '1A': ['Morledge', 'Derwent Street', 'Pride Park', 'Alvaston'],
     '1C': ['Morledge', 'Victoria Street', 'City Centre', 'Pride Park'],
@@ -53,6 +68,7 @@ const App = () => {
     '2A': ['Morledge', 'London Road', 'Osmaston Road', 'Chellaston'],
   };
 
+  //Text-to-Speech
   const speak = (text) => {
     console.log('Speaking:', text);
     const utterance = new SpeechSynthesisUtterance(text);
@@ -63,6 +79,7 @@ const App = () => {
     window.speechSynthesis.speak(utterance);
   };
 
+  //Fetch Transit Data
   const getTransitData = (destination) => {
     const destinationLower = destination.toLowerCase();
     setQueryLog((prev) => [...prev, { destination, timestamp: new Date().toISOString() }]);
@@ -239,8 +256,8 @@ const App = () => {
       command.includes('exit route') ||
       command.includes('exit this route') ||
       command.includes('exit the route') ||
-      command.includes('i’m done')
-    ) {
+      command.includes('i’m done')) 
+    {
       resetTranscript();
       exitRoute();
     } else if (showTravelTypeDialog && (command.includes('bus') || command.includes('train'))) {
@@ -326,56 +343,6 @@ const App = () => {
     speak(highContrast ? 'High contrast off' : 'High contrast on');
   };
 
-  const styles = {
-    container: {
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '20px',
-    },
-    transitText: {
-      textAlign: 'center',
-      marginTop: '50px',
-      fontSize: '24px',
-    },
-    errorText: {
-      textAlign: 'center',
-      fontSize: '18px',
-      margin: '10px 0',
-    },
-    fetchButton: {
-      fontSize: '18px',
-      padding: '10px 20px',
-      margin: '10px 0',
-      borderColor: highContrast ? '#000' : '#fff',
-      color: highContrast ? '#000' : '#fff',
-    },
-    exitButton: {
-      fontSize: '18px',
-      padding: '10px 20px',
-      margin: '10px 0',
-      backgroundColor: highContrast ? '#d00' : '#ff4444',
-      color: '#fff',
-    },
-    toggleContainer: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      marginBottom: '20px',
-    },
-    toggleLabel: {
-      fontSize: '18px',
-      margin: '10px 0',
-    },
-    destinationButton: {
-      fontSize: '16px',
-      margin: '5px',
-      backgroundColor: highContrast ? '#ddd' : '#333',
-      color: highContrast ? '#000' : '#fff',
-    },
-  };
 
   return (
     <Container
@@ -476,7 +443,7 @@ const App = () => {
       <Button
         variant="outlined"
         onClick={handleFetchTransit}
-        style={styles.fetchButton}
+        style={styles.fetchButton(highContrast)}
         aria-label="Fetch transit information"
         role="button"
       >
@@ -487,7 +454,7 @@ const App = () => {
         <Button
           variant="contained"
           onClick={exitRoute}
-          style={styles.exitButton}
+          style={styles.exitButton(highContrast)}
           aria-label="Exit current route"
           role="button"
         >
@@ -576,7 +543,7 @@ const App = () => {
                 key={destination}
                 variant="contained"
                 onClick={() => handleDestinationSelect(destination)}
-                style={styles.destinationButton}
+                style={styles.destinationButton(highContrast)}
                 aria-label={`Select ${destination}`}
                 role="button"
               >
