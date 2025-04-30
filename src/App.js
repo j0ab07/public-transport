@@ -9,7 +9,12 @@ import './App.css';
 import { styles } from './AppStyles';
 
 
+
+
 const App = () => {
+  
+//#region Functions
+  
   //Transit data
   const [transitInfo, setTransitInfo] = useState([]); //Stores bus/train info
   const [selectedRoute, setSelectedRoute] = useState(null); // Current selected route
@@ -343,8 +348,11 @@ const App = () => {
     speak(highContrast ? 'High contrast off' : 'High contrast on');
   };
 
+//#endregion
+ 
 
-  return (
+return (
+  
     <Container
       maxWidth="sm"
       style={{
@@ -588,5 +596,6 @@ const App = () => {
     </Container>
   );
 };
+
 
 export default App;
