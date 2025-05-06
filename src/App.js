@@ -63,7 +63,7 @@ const App = () => {
     ],
   };
 
-  //Example routes
+  //Example bus routes
   const mockRoutes = {
     '1A': ['Morledge', 'Derwent Street', 'Pride Park', 'Alvaston'],
     '1C': ['Morledge', 'Victoria Street', 'City Centre', 'Pride Park'],
@@ -215,7 +215,7 @@ const App = () => {
     setMicEnabled(true);
     setError('');
     setLastErrorTime(null);
-    speak('What type of travel? Say Bus or Train.');
+    speak('What type of travel? Say Bus or Train or select below.');
     if (browserSupportsSpeechRecognition) {
       resetTranscript();
       SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
@@ -282,7 +282,7 @@ const App = () => {
         setShowTravelTypeDialog(true);
         setError('');
         setLastErrorTime(null);
-        speak('What type of travel? Say Bus or Train.');
+        speak('What type of travel? Say Bus or Train or select below.');
         if (browserSupportsSpeechRecognition && micEnabled) {
           SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
         }
@@ -290,7 +290,7 @@ const App = () => {
         setShowTravelTypeDialog(true);
         setError('');
         setLastErrorTime(null);
-        speak('What type of travel? Say Bus or Train.');
+        speak('What type of travel? Say Bus or Train or select below.');
         if (browserSupportsSpeechRecognition && micEnabled) {
           SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
         }
@@ -357,8 +357,11 @@ return (
       maxWidth="sm"
       style={{
         ...styles.container,
-        backgroundColor: highContrast ? '#fff' : '#000',
+        backgroundColor: highContrast ? '#ddd' : '#333',
         color: highContrast ? '#000' : '#fff',
+        padding: '16px',
+        height: '100vh', // Use full viewport height
+        overflowY: 'auto' // Enable scrolling
       }}
     >
       <Typography
@@ -491,6 +494,7 @@ return (
       </Box>
 
       <Dialog
+        fullScreen={window.innerWidth < 600}
         open={showTravelTypeDialog}
         onClose={() => {
           setShowTravelTypeDialog(false);
@@ -504,15 +508,55 @@ return (
       >
         <DialogTitle id="travel-type-dialog-title">What Type of Travel?</DialogTitle>
         <DialogContent>
-          <Typography>Say "Bus" or "Train"</Typography>
-          <List>
-            <ListItem aria-label="Bus">
-              <ListItemText primary="Bus" />
-            </ListItem>
-            <ListItem aria-label="Train">
-              <ListItemText primary="Train" />
-            </ListItem>
-          </List>
+          <Typography>Say "Bus" or "Train" or select below:</Typography>
+          <Box display="flex" justifyContent="center" gap={2} mt={2}>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setShowTravelTypeDialog(false);
+                setShowRouteDialog(true);
+                setError('');
+                setLastErrorTime(null);
+                speak('Select a destination, like Pride Park or Derby Station.');
+                if (browserSupportsSpeechRecognition && micEnabled) {
+                  SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
+                }
+              }}
+              style={{
+                backgroundColor: highContrast ? '#ddd' : '#333',
+                color: highContrast ? '#fff' : '#fff',
+                padding: '10px 20px',
+                fontSize: '18px'
+              }}
+              aria-label="Select Bus"
+            >
+              Bus
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setShowTravelTypeDialog(false);
+                // For demo purposes, we'll show the same bus options
+                // In a real app, you'd fetch train data here
+                setShowRouteDialog(true);
+                setError('');
+                setLastErrorTime(null);
+                speak('Select a destination, like Pride Park or Derby Station.');
+                if (browserSupportsSpeechRecognition && micEnabled) {
+                  SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
+                }
+              }}
+              style={{
+                backgroundColor: highContrast ? '#ddd' : '#333',
+                color: highContrast ? '#fff' : '#fff',
+                padding: '10px 20px',
+                fontSize: '18px'
+              }}
+              aria-label="Select Train"
+            >
+              Train
+            </Button>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button
@@ -531,6 +575,7 @@ return (
       </Dialog>
 
       <Dialog
+        fullScreen={window.innerWidth < 600}
         open={showRouteDialog}
         onClose={() => {
           setShowRouteDialog(false);
@@ -544,18 +589,28 @@ return (
       >
         <DialogTitle id="route-dialog-title">Select Your Destination</DialogTitle>
         <DialogContent>
-          <Typography>Select a destination, like Pride Park or Derby Station</Typography>
-          <Box display="flex" flexWrap="wrap" justifyContent="center">
+          <Box display="flex" flexWrap="wrap" justifyContent="center" gap={2} mt={2}>
             {Object.keys(mockDerbyBuses).map((destination) => (
               <Button
                 key={destination}
                 variant="contained"
-                onClick={() => handleDestinationSelect(destination)}
-                style={styles.destinationButton(highContrast)}
+                onClick={() => {
+                  handleDestinationSelect(destination);
+                  setShowRouteDialog(false);
+                }}
+                style={{
+                  backgroundColor: highContrast ? '#ddd' : '#333',
+                  color: highContrast ? '#fff' : '#fff',
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  textTransform: 'capitalize',
+                  minWidth: '120px'
+                }}
                 aria-label={`Select ${destination}`}
-                role="button"
               >
-                {destination.charAt(0).toUpperCase() + destination.slice(1)}
+                {destination.split(' ').map(word => 
+                  word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ')}
               </Button>
             ))}
           </Box>
@@ -575,7 +630,6 @@ return (
               }
             }}
             style={{ color: highContrast ? '#000' : '#007AFF' }}
-            aria-label="Go back"
           >
             Go Back
           </Button>
@@ -587,7 +641,6 @@ return (
               resetTranscript();
             }}
             style={{ color: highContrast ? '#000' : '#007AFF' }}
-            aria-label="Cancel"
           >
             Cancel
           </Button>

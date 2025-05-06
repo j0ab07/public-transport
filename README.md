@@ -14,6 +14,30 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
 
+## 📱 Accessing the App on Mobile (Using ngrok)
+
+To test this app on a real mobile device:
+
+1. Make sure your app is running locally:
+
+   `npm start`
+
+By default, this runs at http://localhost:3000.
+
+2. Install ngrok and run the following in a separate terminal:
+
+    `ngrok http 3000`
+
+
+3. ngrok will provide a public URL, such as:
+
+    `https://your-subdomain.ngrok-free.app`
+
+4. Open that public URL in your mobile browser (on the same or different network).
+
+You can now use and test the app on any mobile device.
+
+
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.\
