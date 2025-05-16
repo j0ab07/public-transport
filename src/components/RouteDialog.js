@@ -1,38 +1,37 @@
 import React from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box } from '@mui/material';
 import { mockDerbyBuses } from '../data/mockData';
+import { styles } from '../styles/AppStyles';
 
 // Component for the dialog to select a destination
-const RouteDialog = ({ open, onClose, onBack, onSelect, highContrast }) => {
+const RouteDialog = ({ open, onClose, onSelect, highContrast }) => {
   return (
-    // Dialog that appears when selecting a destination
     <Dialog
-      fullScreen={window.innerWidth < 600}
+      fullScreen={{ xs: true, sm: false }} // Full-screen on mobile
       open={open}
       onClose={onClose}
       aria-labelledby="route-dialog-title"
-      maxWidth="sm"
-      fullWidth
+      maxWidth="md"
+      sx={{ '& .MuiDialog-paper': { backgroundColor: highContrast ? '#fff' : '#1a1a1a' } }}
     >
-      {/* Dialog title */}
-      <DialogTitle id="route-dialog-title">Select Your Destination</DialogTitle>
+      <DialogTitle id="route-dialog-title" sx={{ color: highContrast ? '#000' : '#fff' }}>
+        Select Your Destination
+      </DialogTitle>
       <DialogContent>
-        {/* Grid of buttons for each available destination */}
-        <Box display="flex" flexWrap="wrap" justifyContent="center" gap={2} mt={2}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, // 2 columns mobile, 3 desktop
+            gap: { xs: 2, md: 3 },
+            mt: 2,
+          }}
+        >
           {Object.keys(mockDerbyBuses).map((destination) => (
-            // Button for each destination, triggers onSelect when clicked
             <Button
               key={destination}
               variant="contained"
               onClick={() => onSelect(destination)}
-              style={{
-                backgroundColor: highContrast ? '#ddd' : '#333',
-                color: highContrast ? '#fff' : '#fff',
-                padding: '10px 20px',
-                fontSize: '16px',
-                textTransform: 'capitalize',
-                minWidth: '120px',
-              }}
+              sx={styles.destinationButton(highContrast)}
               aria-label={`Select ${destination}`}
             >
               {destination
@@ -44,10 +43,13 @@ const RouteDialog = ({ open, onClose, onBack, onSelect, highContrast }) => {
         </Box>
       </DialogContent>
       <DialogActions>
-        {/* Button to cancel and close the dialog */}
         <Button
           onClick={onClose}
-          style={{ color: highContrast ? '#000' : '#007AFF' }}
+          sx={{
+            color: highContrast ? '#000' : '#007AFF',
+            fontSize: { xs: '1rem', md: '1.125rem' },
+            padding: '0.75rem 1.5rem',
+          }}
           aria-label="Cancel"
         >
           Cancel

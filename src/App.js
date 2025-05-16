@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Typography, Button, Box, Switch } from '@mui/material';
+import MicIcon from '@mui/icons-material/Mic';
 import TransitList from './components/TransitList';
 import RouteDialog from './components/RouteDialog';
 import useTransit from './hooks/useTransit';
@@ -20,6 +21,8 @@ const App = () => {
     showRouteDialog,
     handleFetchTransit,
     exitRoute,
+    handleGetOff,
+    getNextStop,
     setShowRouteDialog,
     setMicEnabled,
     handleDestinationSelect,
@@ -35,22 +38,36 @@ const App = () => {
 
   // Render the main UI with transit data, buttons, and dialogs
   return (
-    // Container for the entire app, styled based on high contrast mode
     <Container
-      maxWidth="sm"
-      style={{
+      sx={{
         ...styles.container,
-        backgroundColor: highContrast ? '#ddd' : '#333',
+        backgroundColor: highContrast ? '#fff' : '#1a1a1a',
         color: highContrast ? '#000' : '#fff',
-        padding: '16px',
-        height: '100vh',
-        overflowY: 'auto',
       }}
     >
-      {/* Header text indicating whether transit data is available */}
+      {/* Voice input indicator */}
+      {micEnabled && (
+        <Box sx={styles.voiceBadge}>
+          <MicIcon fontSize="small" sx={{ mr: 0.5 }} />
+          Voice Input Active
+        </Box>
+      )}
+
+      {/* High contrast toggle */}
+      <Box sx={styles.toggleContainer}>
+        <Typography sx={styles.toggleLabel}>High Contrast</Typography>
+        <Switch
+          checked={highContrast}
+          onChange={toggleHighContrast}
+          aria-label={highContrast ? 'Turn off high contrast' : 'Turn on high contrast'}
+          sx={{ color: '#fff' }}
+        />
+      </Box>
+
+      {/* Header */}
       <Typography
         variant="h4"
-        style={{
+        sx={{
           ...styles.transitText,
           color: highContrast ? '#000' : '#fff',
         }}
@@ -60,7 +77,7 @@ const App = () => {
         {transitInfo.length === 0 ? 'No transit data yet' : 'Next Buses'}
       </Typography>
 
-      {/* Component to display transit information and stops */}
+      {/* Transit information and stops */}
       <TransitList
         transitInfo={transitInfo}
         selectedRoute={selectedRoute}
@@ -68,10 +85,10 @@ const App = () => {
         highContrast={highContrast}
       />
 
-      {/* Display error messages if any */}
+      {/* Error messages */}
       {error && (
         <Typography
-          style={{
+          sx={{
             ...styles.errorText,
             color: highContrast ? '#d00' : '#ff4444',
           }}
@@ -82,49 +99,44 @@ const App = () => {
         </Typography>
       )}
 
-      {/* Button to initiate fetching transit data */}
-      <Button
-        variant="outlined"
-        onClick={handleFetchTransit}
-        style={styles.fetchButton(highContrast)}
-        aria-label="Fetch transit information"
-        role="button"
-      >
-        Fetch Transit
-      </Button>
-
-      {/* Button to exit the current route, shown only if a route is selected */}
-      {selectedRoute && (
+      {/* Sticky footer with action buttons */}
+      <Box sx={styles.footer}>
         <Button
-          variant="contained"
-          onClick={exitRoute}
-          style={styles.exitButton(highContrast)}
-          aria-label="Exit current route"
-          role="button"
+          variant="outlined"
+          onClick={handleFetchTransit}
+          sx={styles.fetchButton(highContrast)}
+          aria-label="Fetch transit information"
         >
-          Exit Route
+          Fetch Transit
         </Button>
-      )}
-
-      {/* Toggle for high contrast mode */}
-      <Box style={styles.toggleContainer}>
-        <Box display="flex" alignItems="center">
-          <Typography
-            style={{
-              ...styles.toggleLabel,
-              color: highContrast ? '#000' : '#fff',
-            }}
-            aria-label="High contrast mode"
-          >
-            High Contrast
-          </Typography>
-          <Switch
-            checked={highContrast}
-            onChange={toggleHighContrast}
-            aria-label={highContrast ? 'Turn off high contrast' : 'Turn on high contrast'}
-            role="switch"
-          />
-        </Box>
+        {selectedRoute && (
+          <>
+            <Button
+              variant="contained"
+              onClick={handleGetOff}
+              sx={styles.getOffButton(highContrast)}
+              aria-label="Get off at current stop"
+            >
+              Get Off Here
+            </Button>
+            <Button
+              variant="contained"
+              onClick={getNextStop}
+              sx={styles.nextStopButton(highContrast)}
+              aria-label="Advance to next stop"
+            >
+              Next Stop
+            </Button>
+            <Button
+              variant="contained"
+              onClick={exitRoute}
+              sx={styles.exitButton(highContrast)}
+              aria-label="Exit current route"
+            >
+              Exit Route
+            </Button>
+          </>
+        )}
       </Box>
 
       {/* Dialog for selecting a destination */}

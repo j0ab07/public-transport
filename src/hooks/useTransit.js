@@ -15,7 +15,7 @@ const useTransit = () => {
   const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
   // State for error messages
   const [error, setError] = useState('');
-  // State for logging user queries
+  // State for logging user queries and get-off events
   const [queryLog, setQueryLog] = useState([]);
   // State for tracking the current stop index
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
@@ -26,14 +26,33 @@ const useTransit = () => {
   // State to prevent concurrent processing
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Map of destination synonyms for flexible matching
+  const destinationSynonyms = {
+    'university': 'university bus park',
+    'hospital': 'royal hospital entrance',
+    'derby hospital': 'royal hospital entrance',
+    'royal derby': 'royal hospital entrance',
+    'uttoxeter': 'uttoxeter bus station',
+    'derby': 'derby bus station',
+    'beetwell': 'new beetwell street',
+    'high': 'high street',
+  };
+
   // Fetch transit data for a given destination
   const getTransitData = (destination) => {
-    const destinationLower = destination.toLowerCase();
+    const destinationLower = destination.toLowerCase().trim();
     // Log the query
-    setQueryLog((prev) => [...prev, { destination, timestamp: new Date().toISOString() }]);
+    setQueryLog((prev) => [
+      ...prev,
+      { type: 'destination', destination, timestamp: new Date().toISOString() },
+    ]);
 
+    // Check for synonyms
+    const resolvedDestination = destinationSynonyms[destinationLower] || destinationLower;
     // Find a matching destination in mock data
-    const matchedKey = Object.keys(mockDerbyBuses).find((key) => destinationLower.includes(key));
+    const matchedKey = Object.keys(mockDerbyBuses).find((key) =>
+      resolvedDestination.includes(key) || key.includes(resolvedDestination)
+    );
 
     if (matchedKey) {
       const buses = mockDerbyBuses[matchedKey];
@@ -81,7 +100,10 @@ const useTransit = () => {
 
   // Handle destination selection and fetch transit data
   const handleDestinationSelect = (destination) => {
-    speak(`Selected ${destination}`);
+    speak(`Selected ${destination
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')}`);
     getTransitData(destination);
   };
 
@@ -136,6 +158,16 @@ const useTransit = () => {
       // Confirm destination reached
       setError('');
       speak('You have reached your destination.');
+      setQueryLog((prev) => [
+        ...prev,
+        {
+          type: 'get_off',
+          stop: stops[currentStopIndex],
+          bus: selectedRoute.bus,
+          destination: selectedRoute.destination,
+          timestamp: new Date().toISOString(),
+        },
+      ]);
       setSelectedRoute(null);
       setCurrentStopIndex(0);
       setTransitInfo([]);
@@ -151,6 +183,40 @@ const useTransit = () => {
         setLastErrorTime(now);
       }
     }
+  };
+
+  // Handle user getting off at the current stop
+  const handleGetOff = () => {
+    if (!selectedRoute || !mockRoutes[selectedRoute.bus]) {
+      const now = Date.now();
+      if (!lastErrorTime || now - lastErrorTime > 5000) {
+        setError('No route selected. Select a destination first.');
+        speak('No route selected. Select a destination first.');
+        setLastErrorTime(now);
+      }
+      return;
+    }
+    const stops = mockRoutes[selectedRoute.bus];
+    const currentStop = stops[currentStopIndex];
+    setError('');
+    speak(`You got off at ${currentStop}.`);
+    setQueryLog((prev) => [
+      ...prev,
+      {
+        type: 'get_off',
+        stop: currentStop,
+        bus: selectedRoute.bus,
+        destination: selectedRoute.destination,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    navigator.vibrate?.([200, 100, 200]);
+    setSelectedRoute(null);
+    setCurrentStopIndex(0);
+    setTransitInfo([]);
+    setMicEnabled(false);
+    SpeechRecognition.stopListening();
+    resetTranscript();
   };
 
   // Exit the current route and reset state
@@ -172,7 +238,7 @@ const useTransit = () => {
     setMicEnabled(true);
     setError('');
     setLastErrorTime(null);
-    speak('Select a destination, like Pride Park or Derby Station.');
+    speak('Select a destination, like Full Street, High Street, or New Beetwell Street.');
     if (browserSupportsSpeechRecognition) {
       resetTranscript();
       SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
@@ -185,18 +251,30 @@ const useTransit = () => {
 
     const command = transcript.toLowerCase().trim();
     console.log('Voice command:', command);
+    if (showRouteDialog) {
+      // Check if the command matches a destination or synonym when dialog is open
+      const resolvedCommand = destinationSynonyms[command] || command;
+      const matchedKey = Object.keys(mockDerbyBuses).find((key) =>
+        resolvedCommand.includes(key) || key.includes(resolvedCommand)
+      );
+      if (matchedKey) {
+        resetTranscript();
+        handleDestinationSelect(matchedKey);
+        return;
+      }
+    }
     if (command.includes('next bus')) {
       // Handle request for next bus to a destination
       const destinationMatch = command.match(/(?:to|for)\s+(.+)/);
       const destination = destinationMatch ? destinationMatch[1].trim() : 'unknown';
       if (destination && destination !== 'unknown') {
         resetTranscript();
-        getTransitData(destination);
+        handleDestinationSelect(destination);
       } else {
         const now = Date.now();
         if (!lastErrorTime || now - lastErrorTime > 5000) {
-          setError('Please specify a destination, like Pride Park.');
-          speak('Please specify a destination, like Pride Park.');
+          setError('Please specify a destination, like High Street.');
+          speak('Please specify a destination, like High Street.');
           setLastErrorTime(now);
         }
         if (browserSupportsSpeechRecognition && micEnabled) {
@@ -215,6 +293,17 @@ const useTransit = () => {
       // Confirm destination reached
       resetTranscript();
       handleDestinationReached();
+      if (browserSupportsSpeechRecognition && micEnabled) {
+        SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
+      }
+    } else if (
+      command.includes('get off here') ||
+      command.includes('stop here') ||
+      command.includes('get off')
+    ) {
+      // Handle getting off at the current stop
+      resetTranscript();
+      handleGetOff();
       if (browserSupportsSpeechRecognition && micEnabled) {
         SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
       }
@@ -298,6 +387,8 @@ const useTransit = () => {
     showRouteDialog,
     handleFetchTransit,
     exitRoute,
+    handleGetOff,
+    getNextStop,
     setShowRouteDialog,
     setMicEnabled,
     handleDestinationSelect,
