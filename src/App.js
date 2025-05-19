@@ -3,15 +3,15 @@ import { Container, Typography, Button, Box, Switch } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import TransitList from './components/TransitList';
 import RouteDialog from './components/RouteDialog';
+import LogsDialog from './components/LogsDialog';
 import useTransit from './hooks/useTransit';
 import { styles } from './styles/AppStyles';
 import './App.css';
 
 // Main App component that orchestrates the transit application UI and state
 const App = () => {
-  // State for high contrast mode to toggle between light and dark themes
   const [highContrast, setHighContrast] = useState(false);
-  // Custom hook to manage transit-related state and logic
+  const [showLogsDialog, setShowLogsDialog] = useState(false);
   const {
     transitInfo,
     selectedRoute,
@@ -19,6 +19,7 @@ const App = () => {
     error,
     micEnabled,
     showRouteDialog,
+    queryLog,
     handleFetchTransit,
     exitRoute,
     handleGetOff,
@@ -26,9 +27,9 @@ const App = () => {
     setShowRouteDialog,
     setMicEnabled,
     handleDestinationSelect,
+    clearLogs,
   } = useTransit();
 
-  // Toggles high contrast mode and announces the change via text-to-speech
   const toggleHighContrast = () => {
     setHighContrast(!highContrast);
     const utterance = new SpeechSynthesisUtterance(highContrast ? 'High contrast off' : 'High contrast on');
@@ -36,7 +37,12 @@ const App = () => {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Render the main UI with transit data, buttons, and dialogs
+  const speak = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  };
+
   return (
     <Container
       sx={{
@@ -45,7 +51,6 @@ const App = () => {
         color: highContrast ? '#000' : '#fff',
       }}
     >
-      {/* Voice input indicator */}
       {micEnabled && (
         <Box sx={styles.voiceBadge}>
           <MicIcon fontSize="small" sx={{ mr: 0.5 }} />
@@ -53,7 +58,6 @@ const App = () => {
         </Box>
       )}
 
-      {/* High contrast toggle */}
       <Box sx={styles.toggleContainer}>
         <Typography sx={styles.toggleLabel}>High Contrast</Typography>
         <Switch
@@ -64,7 +68,6 @@ const App = () => {
         />
       </Box>
 
-      {/* Header */}
       <Typography
         variant="h4"
         sx={{
@@ -77,7 +80,6 @@ const App = () => {
         {transitInfo.length === 0 ? 'No transit data yet' : 'Next Buses'}
       </Typography>
 
-      {/* Transit information and stops */}
       <TransitList
         transitInfo={transitInfo}
         selectedRoute={selectedRoute}
@@ -85,7 +87,6 @@ const App = () => {
         highContrast={highContrast}
       />
 
-      {/* Error messages */}
       {error && (
         <Typography
           sx={{
@@ -99,7 +100,6 @@ const App = () => {
         </Typography>
       )}
 
-      {/* Sticky footer with action buttons */}
       <Box sx={styles.footer}>
         <Button
           variant="outlined"
@@ -137,9 +137,20 @@ const App = () => {
             </Button>
           </>
         )}
+        <Button
+          variant="contained"
+          onClick={() => {
+            setShowLogsDialog(true);
+            speak('Opening route logs');
+            navigator.vibrate?.([200, 100, 200]);
+          }}
+          sx={styles.logsButton(highContrast)}
+          aria-label="View route logs"
+        >
+          Logs
+        </Button>
       </Box>
 
-      {/* Dialog for selecting a destination */}
       <RouteDialog
         open={showRouteDialog}
         onClose={() => {
@@ -148,6 +159,18 @@ const App = () => {
         }}
         onSelect={handleDestinationSelect}
         highContrast={highContrast}
+      />
+
+      <LogsDialog
+        open={showLogsDialog}
+        onClose={() => {
+          setShowLogsDialog(false);
+          speak('Closing route logs');
+          navigator.vibrate?.([200, 100, 200]);
+        }}
+        queryLog={queryLog}
+        highContrast={highContrast}
+        clearLogs={clearLogs}
       />
     </Container>
   );

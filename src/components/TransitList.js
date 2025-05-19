@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography, List, ListItem, ListItemText, Box } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { styles } from '../styles/AppStyles';
-import { mockRoutes } from '../data/mockData';
+import { mockDerbyBuses, mockRoutes } from '../data/mockData';
 
 // Component to display the list of transit information and stops for the selected route
 const TransitList = ({ transitInfo, selectedRoute, currentStopIndex, highContrast }) => {
@@ -21,14 +21,14 @@ const TransitList = ({ transitInfo, selectedRoute, currentStopIndex, highContras
           >
             <ListItemText
               primary={`Bus ${bus.bus} to ${bus.destination}`}
-              secondary={`From ${bus.stop} at ${bus.time}`}
+              secondary={`From ${bus.stop} at ${bus.time} (${bus.operator})`}
               primaryTypographyProps={{
                 color: highContrast ? '#000' : '#fff',
-                fontSize: { xs: '1.125rem', md: '1.25rem' }, // 18px mobile, 20px desktop
+                fontSize: { xs: '1.125rem', md: '1.25rem' },
               }}
               secondaryTypographyProps={{
                 color: highContrast ? '#333' : '#ccc',
-                fontSize: { xs: '0.875rem', md: '1rem' }, // 14px mobile, 16px desktop
+                fontSize: { xs: '0.875rem', md: '1rem' },
               }}
             />
           </ListItem>
@@ -43,7 +43,7 @@ const TransitList = ({ transitInfo, selectedRoute, currentStopIndex, highContras
             sx={{
               ...styles.transitText,
               color: highContrast ? '#000' : '#fff',
-              fontSize: { xs: '1.25rem', md: '1.5rem' }, // 20px mobile, 24px desktop
+              fontSize: { xs: '1.25rem', md: '1.5rem' },
             }}
             aria-live="polite"
             role="status"
@@ -59,7 +59,7 @@ const TransitList = ({ transitInfo, selectedRoute, currentStopIndex, highContras
                   margin: { xs: '0.5rem 0', md: '0.75rem 0' },
                   border: index === currentStopIndex ? `2px solid ${highContrast ? '#000' : '#fff'}` : 'none',
                   borderRadius: '8px',
-                  transition: 'background-color 0.3s ease', // Smooth transition
+                  transition: 'background-color 0.3s ease',
                   display: 'flex',
                   alignItems: 'center',
                 }}
@@ -71,10 +71,10 @@ const TransitList = ({ transitInfo, selectedRoute, currentStopIndex, highContras
                   />
                 )}
                 <ListItemText
-                  primary={stop}
+                  primary={stop.name}
                   primaryTypographyProps={{
                     color: highContrast ? '#000' : '#fff',
-                    fontSize: { xs: '1rem', md: '1.125rem' }, // 16px mobile, 18px desktop
+                    fontSize: { xs: '1rem', md: '1.125rem' },
                     fontWeight: index === currentStopIndex ? 'bold' : 'normal',
                   }}
                 />
