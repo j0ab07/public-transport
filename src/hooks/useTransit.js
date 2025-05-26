@@ -5,19 +5,21 @@ import { speak } from '../utils/speech';
 
 // Custom hook to manage transit-related state and logic
 const useTransit = () => {
-  const [transitInfo, setTransitInfo] = useState([]);
-  const [selectedRoute, setSelectedRoute] = useState(null);
-  const [micEnabled, setMicEnabled] = useState(false);
-  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
-  const [error, setError] = useState('');
-  const [queryLog, setQueryLog] = useState([]);
-  const [currentStopIndex, setCurrentStopIndex] = useState(0);
-  const [visitedStops, setVisitedStops] = useState([]);
-  const [showRouteDialog, setShowRouteDialog] = useState(false);
-  const [lastErrorTime, setLastErrorTime] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [currentJourneyId, setCurrentJourneyId] = useState(null);
+  // State for transit data, route, and UI controls
+  const [transitInfo, setTransitInfo] = useState([]); // Array of available buses
+  const [selectedRoute, setSelectedRoute] = useState(null); // Currently selected route
+  const [micEnabled, setMicEnabled] = useState(false); // Flag for voice input status
+  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition(); // Speech recognition data
+  const [error, setError] = useState(''); // Error messages for UI
+  const [queryLog, setQueryLog] = useState([]); // Log of journey queries
+  const [currentStopIndex, setCurrentStopIndex] = useState(0); // Current stop index in route
+  const [visitedStops, setVisitedStops] = useState([]); // Stops visited in journey
+  const [showRouteDialog, setShowRouteDialog] = useState(false); // Flag for route dialog visibility
+  const [lastErrorTime, setLastErrorTime] = useState(null); // Timestamp of last error
+  const [isProcessing, setIsProcessing] = useState(false); // Flag to prevent concurrent actions
+  const [currentJourneyId, setCurrentJourneyId] = useState(null); // Unique ID for current journey
 
+  // Mapping of destination synonyms for voice input flexibility
   const destinationSynonyms = {
     'university': 'university bus park',
     'hospital': 'royal hospital entrance',
@@ -29,10 +31,12 @@ const useTransit = () => {
     'high': 'high street',
   };
 
+  // Generates a unique journey ID
   const generateJourneyId = () => {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   };
 
+  // Fetches transit data based on destination input
   const getTransitData = (destination) => {
     const destinationLower = destination.toLowerCase().trim();
     const resolvedDestination = destinationSynonyms[destinationLower] || destinationLower;
@@ -70,6 +74,7 @@ const useTransit = () => {
           timestamp: new Date().toISOString(),
         },
       ]);
+      // Announce bus details and stops
       const summary = buses
         .map((bus) => `Bus ${bus.bus} to ${bus.destination} at ${bus.time}`)
         .join('. ');
@@ -91,6 +96,7 @@ const useTransit = () => {
     }
   };
 
+  // Handles destination selection with speech announcement
   const handleDestinationSelect = (destination) => {
     speak(`Selected ${destination
       .split(' ')
@@ -99,6 +105,7 @@ const useTransit = () => {
     getTransitData(destination);
   };
 
+  // Advances to the next stop in the route
   const getNextStop = () => {
     if (isProcessing || !selectedRoute || !mockRoutes[selectedRoute.bus]) {
       const now = Date.now();
@@ -148,6 +155,7 @@ const useTransit = () => {
     setIsProcessing(false);
   };
 
+  // Verifies if the user has reached their destination
   const handleDestinationReached = () => {
     if (!selectedRoute || !mockRoutes[selectedRoute.bus]) {
       const now = Date.now();
@@ -187,6 +195,7 @@ const useTransit = () => {
     }
   };
 
+  // Handles user getting off at the current stop
   const handleGetOff = () => {
     if (!selectedRoute || !mockRoutes[selectedRoute.bus]) {
       const now = Date.now();
@@ -219,6 +228,7 @@ const useTransit = () => {
     resetTranscript();
   };
 
+  // Exits the current route and resets state
   const exitRoute = () => {
     setSelectedRoute(null);
     setCurrentStopIndex(0);
@@ -233,6 +243,7 @@ const useTransit = () => {
     navigator.vibrate?.([200, 100, 200]);
   };
 
+  // Initiates transit data fetch and voice input
   const handleFetchTransit = () => {
     setShowRouteDialog(true);
     setMicEnabled(true);
@@ -245,6 +256,7 @@ const useTransit = () => {
     }
   };
 
+  // Clears journey logs from state and storage
   const clearLogs = () => {
     setQueryLog([]);
     localStorage.removeItem('queryLog');
@@ -252,22 +264,19 @@ const useTransit = () => {
     navigator.vibrate?.([200, 100, 200]);
   };
 
-  // Proximity alert effect (without announcements)
+  // Effect for periodic proximity alerts
   useEffect(() => {
     if (!selectedRoute || !mockRoutes[selectedRoute.bus]) return;
-
     const stops = mockRoutes[selectedRoute.bus];
     const interval = setInterval(() => {
-      // Removed the "Approaching next stop" announcement
-      // Still keeping the interval to maintain the functionality, but without the speak
+      // Placeholder for proximity alerts
     }, 10000);
-
     return () => clearInterval(interval);
   }, [selectedRoute, currentStopIndex]);
 
+  // Effect to handle voice command processing
   useEffect(() => {
     if (!transcript || !micEnabled || isProcessing) return;
-
     const command = transcript.toLowerCase().trim();
     console.log('Voice command:', command);
     if (showRouteDialog) {
@@ -383,18 +392,18 @@ const useTransit = () => {
     }
   }, [transcript, showRouteDialog, selectedRoute, micEnabled, isProcessing, lastErrorTime]);
 
+  // Effect to stop listening when no route or dialog is active
   useEffect(() => {
     if (!browserSupportsSpeechRecognition) return;
-
     if (!showRouteDialog && !selectedRoute && listening) {
       SpeechRecognition.stopListening();
       resetTranscript();
     }
   }, [showRouteDialog, selectedRoute, listening]);
 
+  // Effect to handle speech recognition errors
   useEffect(() => {
     if (!browserSupportsSpeechRecognition) return;
-
     const handleError = (event) => {
       if (event.error === 'no-speech' || event.error === 'audio-capture') {
         const now = Date.now();
@@ -414,13 +423,13 @@ const useTransit = () => {
         }
       }
     };
-
     SpeechRecognition.onError = handleError;
     return () => {
       SpeechRecognition.onError = null;
     };
   }, [showRouteDialog, selectedRoute, micEnabled, lastErrorTime]);
 
+  // Effect to save query log to local storage
   useEffect(() => {
     if (queryLog.length > 0) {
       localStorage.setItem('queryLog', JSON.stringify(queryLog));
@@ -428,6 +437,7 @@ const useTransit = () => {
     }
   }, [queryLog]);
 
+  // Return state and functions for use in App component
   return {
     transitInfo,
     selectedRoute,

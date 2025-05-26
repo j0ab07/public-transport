@@ -10,40 +10,46 @@ import './App.css';
 
 // Main App component that orchestrates the transit application UI and state
 const App = () => {
+  // State for toggling high contrast mode
   const [highContrast, setHighContrast] = useState(false);
+  // State for controlling the visibility of the logs dialog
   const [showLogsDialog, setShowLogsDialog] = useState(false);
+  // Custom hook to manage transit-related state and logic
   const {
-    transitInfo,
-    selectedRoute,
-    currentStopIndex,
-    error,
-    micEnabled,
-    showRouteDialog,
-    queryLog,
-    handleFetchTransit,
-    exitRoute,
-    handleGetOff,
-    getNextStop,
-    setShowRouteDialog,
-    setMicEnabled,
-    handleDestinationSelect,
-    clearLogs,
+    transitInfo,        // Array of transit data
+    selectedRoute,     // Currently selected route
+    currentStopIndex,  // Index of the current stop in the route
+    error,             // Error message for failed operations
+    micEnabled,        // Flag for voice input status
+    showRouteDialog,   // Flag to control route dialog visibility
+    queryLog,          // Log of queries made
+    handleFetchTransit, // Function to fetch transit data
+    exitRoute,         // Function to exit the current route
+    handleGetOff,      // Function to handle getting off at the current stop
+    getNextStop,       // Function to advance to the next stop
+    setShowRouteDialog,// Function to toggle route dialog
+    setMicEnabled,     // Function to toggle voice input
+    handleDestinationSelect, // Function to handle destination selection
+    clearLogs,         // Function to clear query logs
   } = useTransit();
 
+  // Toggles high contrast mode and announces the change via speech synthesis
   const toggleHighContrast = () => {
     setHighContrast(!highContrast);
     const utterance = new SpeechSynthesisUtterance(highContrast ? 'High contrast off' : 'High contrast on');
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    window.speechSynthesis.cancel(); // Cancel any ongoing speech
+    window.speechSynthesis.speak(utterance); // Announce the mode change
   };
 
+  // Utility function to speak provided text using speech synthesis
   const speak = (text) => {
     const utterance = new SpeechSynthesisUtterance(text);
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    window.speechSynthesis.cancel(); // Cancel any ongoing speech
+    window.speechSynthesis.speak(utterance); // Speak the provided text
   };
 
   return (
+    // Main container with dynamic styling based on high contrast mode
     <Container
       sx={{
         ...styles.container,
@@ -51,6 +57,7 @@ const App = () => {
         color: highContrast ? '#000' : '#fff',
       }}
     >
+      {/* Display voice input badge when microphone is enabled */}
       {micEnabled && (
         <Box sx={styles.voiceBadge}>
           <MicIcon fontSize="small" sx={{ mr: 0.5 }} />
@@ -58,6 +65,7 @@ const App = () => {
         </Box>
       )}
 
+      {/* High contrast mode toggle switch */}
       <Box sx={styles.toggleContainer}>
         <Typography sx={styles.toggleLabel}>High Contrast</Typography>
         <Switch
@@ -68,6 +76,7 @@ const App = () => {
         />
       </Box>
 
+      {/* Header displaying transit data status */}
       <Typography
         variant="h4"
         sx={{
@@ -80,6 +89,7 @@ const App = () => {
         {transitInfo.length === 0 ? 'No transit data yet' : 'Next Buses'}
       </Typography>
 
+      {/* Component to display the list of transit information */}
       <TransitList
         transitInfo={transitInfo}
         selectedRoute={selectedRoute}
@@ -87,6 +97,7 @@ const App = () => {
         highContrast={highContrast}
       />
 
+      {/* Display error message if an error occurs */}
       {error && (
         <Typography
           sx={{
@@ -100,7 +111,9 @@ const App = () => {
         </Typography>
       )}
 
+      {/* Footer containing action buttons */}
       <Box sx={styles.footer}>
+        {/* Button to fetch transit data */}
         <Button
           variant="outlined"
           onClick={handleFetchTransit}
@@ -109,6 +122,7 @@ const App = () => {
         >
           Fetch Transit
         </Button>
+        {/* Buttons for route actions, shown only if a route is selected */}
         {selectedRoute && (
           <>
             <Button
@@ -137,12 +151,13 @@ const App = () => {
             </Button>
           </>
         )}
+        {/* Button to open the logs dialog */}
         <Button
           variant="contained"
           onClick={() => {
             setShowLogsDialog(true);
             speak('Opening route logs');
-            navigator.vibrate?.([200, 100, 200]);
+            navigator.vibrate?.([200, 100, 200]); // Vibrate for haptic feedback
           }}
           sx={styles.logsButton(highContrast)}
           aria-label="View route logs"
@@ -151,6 +166,7 @@ const App = () => {
         </Button>
       </Box>
 
+      {/* Dialog for selecting a route */}
       <RouteDialog
         open={showRouteDialog}
         onClose={() => {
@@ -161,12 +177,13 @@ const App = () => {
         highContrast={highContrast}
       />
 
+      {/* Dialog for viewing query logs */}
       <LogsDialog
         open={showLogsDialog}
         onClose={() => {
           setShowLogsDialog(false);
           speak('Closing route logs');
-          navigator.vibrate?.([200, 100, 200]);
+          navigator.vibrate?.([200, 100, 200]); // Vibrate for haptic feedback
         }}
         queryLog={queryLog}
         highContrast={highContrast}

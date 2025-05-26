@@ -7,6 +7,7 @@ import { mockDerbyBuses, mockRoutes } from '../data/mockData';
 // Component to display the list of transit information and stops for the selected route
 const TransitList = ({ transitInfo, selectedRoute, currentStopIndex, highContrast }) => {
   return (
+    // Container for transit list and stops
     <Box sx={{ width: '100%' }}>
       {/* List of available buses */}
       <List>
@@ -64,6 +65,7 @@ const TransitList = ({ transitInfo, selectedRoute, currentStopIndex, highContras
                   alignItems: 'center',
                 }}
               >
+                {/* Icon to indicate current stop */}
                 {index === currentStopIndex && (
                   <ArrowForwardIcon
                     sx={{ color: highContrast ? '#000' : '#fff', mr: 1 }}

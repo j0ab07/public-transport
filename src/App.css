@@ -1,38 +1,45 @@
+/* Styles for the main App container */
 .App {
-  text-align: center;
+  text-align: center; /* Centers text content within the App container */
 }
 
+/* Styles for the App logo */
 .App-logo {
-  height: 40vmin;
-  pointer-events: none;
+  height: 40vmin; /* Sets the logo height to 40% of the viewport's smaller dimension */
+  pointer-events: none; /* Disables pointer interactions with the logo */
 }
 
+/* Media query for devices that support animations */
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
+    /* Applies a continuous 20-second linear rotation animation to the logo */
     animation: App-logo-spin infinite 20s linear;
   }
 }
 
+/* Styles for the App header */
 .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  background-color: #282c34; /* Sets a dark background color */
+  min-height: 100vh; /* Ensures the header spans at least the full viewport height */
+  display: flex; /* Uses flexbox for layout */
+  flex-direction: column; /* Arranges flex items in a column */
+  align-items: center; /* Centers items horizontally */
+  justify-content: center; /* Centers items vertically */
+  font-size: calc(10px + 2vmin); /* Sets a responsive font size */
+  color: white; /* Sets text color to white */
 }
 
+/* Styles for links within the App */
 .App-link {
-  color: #61dafb;
+  color: #61dafb; /* Sets a light blue color for links */
 }
 
+/* Keyframes for the logo spin animation */
 @keyframes App-logo-spin {
   from {
-    transform: rotate(0deg);
+    transform: rotate(0deg); /* Starting position: no rotation */
   }
   to {
-    transform: rotate(360deg);
+    transform: rotate(360deg); /* Ending position: full 360-degree rotation */
   }
 }
